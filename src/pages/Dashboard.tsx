@@ -4,35 +4,30 @@ import EEGChart from '@/components/EEGChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { AlertTriangle, Heart, Signal, Wifi, X } from 'lucide-react';
+import { AlertTriangle, Signal, Wifi, X, Activity } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface SeizureAlert {
   id: string;
-  type: 'ictal' | 'preictal' | 'postictal' | 'interictal';
   timestamp: Date;
   confidence: number;
 }
 
 const Dashboard = () => {
-  const [heartRate, setHeartRate] = useState(72);
   const [signalQuality, setSignalQuality] = useState(85);
+  const [avgAmplitude, setAvgAmplitude] = useState(45);
   const [currentAlert, setCurrentAlert] = useState<SeizureAlert | null>(null);
 
   // Simulation des métriques
   useEffect(() => {
     const interval = setInterval(() => {
-      setHeartRate(prev => prev + (Math.random() - 0.5) * 4);
       setSignalQuality(prev => Math.max(60, Math.min(100, prev + (Math.random() - 0.5) * 10)));
+      setAvgAmplitude(prev => Math.max(20, Math.min(80, prev + (Math.random() - 0.5) * 8)));
       
       // Simulation d'alerte (très rare)
       if (Math.random() < 0.001) { // 0.1% de chance
-        const alertTypes = ['ictal', 'preictal', 'postictal', 'interictal'] as const;
-        const randomType = alertTypes[Math.floor(Math.random() * alertTypes.length)];
-        
         setCurrentAlert({
           id: Date.now().toString(),
-          type: randomType,
           timestamp: new Date(),
           confidence: Math.round(Math.random() * 30 + 70) // 70-100%
         });
@@ -46,16 +41,6 @@ const Dashboard = () => {
     setCurrentAlert(null);
   };
 
-  const getAlertTypeLabel = (type: string) => {
-    const labels = {
-      ictal: 'Crise Ictale',
-      preictal: 'Pré-Ictal',
-      postictal: 'Post-Ictal',
-      interictal: 'Inter-Ictal'
-    };
-    return labels[type as keyof typeof labels] || type;
-  };
-
   const getSignalQualityColor = (quality: number) => {
     if (quality >= 80) return 'bg-mint-green';
     if (quality >= 60) return 'bg-soft-orange';
@@ -64,16 +49,16 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Alerte de crise */}
+      {/* Alerte de crise simplifiée */}
       {currentAlert && (
         <div className="alert-animation">
           <Alert className="bg-coral-red/10 border-coral-red">
             <AlertTriangle className="h-4 w-4 coral-red" />
             <AlertDescription className="flex items-center justify-between">
               <div>
-                <strong className="coral-red">🚨 Alerte Crise Détectée</strong>
+                <strong className="coral-red">🚨 CRISE DÉTECTÉE</strong>
                 <div className="mt-1">
-                  Type: {getAlertTypeLabel(currentAlert.type)} | 
+                  Une activité épileptique a été détectée | 
                   Confiance: {currentAlert.confidence}% | 
                   Heure: {currentAlert.timestamp.toLocaleTimeString('fr-FR')}
                 </div>
@@ -95,22 +80,8 @@ const Dashboard = () => {
       {/* Graphique EEG */}
       <EEGChart isRealTime={true} duration={30} />
 
-      {/* Métriques en temps réel */}
+      {/* Métriques en temps réel - simplifiées */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Fréquence cardiaque */}
-        <Card className="medical-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Fréquence Cardiaque</CardTitle>
-            <Heart className="h-4 w-4 coral-red" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{Math.round(heartRate)} bpm</div>
-            <p className="text-xs text-muted-foreground">
-              Variabilité normale
-            </p>
-          </CardContent>
-        </Card>
-
         {/* Qualité du signal */}
         <Card className="medical-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -127,6 +98,20 @@ const Dashboard = () => {
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               {signalQuality >= 80 ? 'Excellent' : signalQuality >= 60 ? 'Bon' : 'Faible'}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Amplitude Moyenne */}
+        <Card className="medical-card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Amplitude Moy</CardTitle>
+            <Activity className="h-4 w-4 medical-blue" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{Math.round(avgAmplitude)} μV</div>
+            <p className="text-xs text-muted-foreground">
+              Signal dans la plage normale
             </p>
           </CardContent>
         </Card>

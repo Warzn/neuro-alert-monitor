@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Download, Eye, FileText, Filter } from 'lucide-react';
@@ -11,22 +10,19 @@ import { Calendar, Download, Eye, FileText, Filter } from 'lucide-react';
 interface SeizureRecord {
   id: string;
   date: Date;
-  type: 'ictal' | 'preictal' | 'postictal' | 'interictal';
   duration: number; // en secondes
   confidence: number;
   acknowledged: boolean;
 }
 
 const History = () => {
-  const [selectedType, setSelectedType] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('');
 
-  // Données simulées
+  // Données simulées - simplifiées sans types de crises
   const seizureHistory: SeizureRecord[] = [
     {
       id: '1',
       date: new Date('2024-05-30T14:32:00'),
-      type: 'ictal',
       duration: 45,
       confidence: 95,
       acknowledged: true
@@ -34,7 +30,6 @@ const History = () => {
     {
       id: '2',
       date: new Date('2024-05-29T09:15:00'),
-      type: 'preictal',
       duration: 120,
       confidence: 87,
       acknowledged: true
@@ -42,7 +37,6 @@ const History = () => {
     {
       id: '3',
       date: new Date('2024-05-28T16:45:00'),
-      type: 'postictal',
       duration: 180,
       confidence: 92,
       acknowledged: false
@@ -50,7 +44,6 @@ const History = () => {
     {
       id: '4',
       date: new Date('2024-05-27T11:20:00'),
-      type: 'ictal',
       duration: 38,
       confidence: 89,
       acknowledged: true
@@ -58,32 +51,11 @@ const History = () => {
     {
       id: '5',
       date: new Date('2024-05-26T13:55:00'),
-      type: 'interictal',
       duration: 60,
       confidence: 76,
       acknowledged: true
     }
   ];
-
-  const getTypeLabel = (type: string) => {
-    const labels = {
-      ictal: 'Ictale',
-      preictal: 'Pré-Ictale',
-      postictal: 'Post-Ictale',
-      interictal: 'Inter-Ictale'
-    };
-    return labels[type as keyof typeof labels] || type;
-  };
-
-  const getTypeColor = (type: string) => {
-    const colors = {
-      ictal: 'bg-red-100 text-red-800',
-      preictal: 'bg-yellow-100 text-yellow-800',
-      postictal: 'bg-blue-100 text-blue-800',
-      interictal: 'bg-green-100 text-green-800'
-    };
-    return colors[type as keyof typeof colors] || 'bg-gray-100 text-gray-800';
-  };
 
   const formatDuration = (seconds: number) => {
     if (seconds < 60) return `${seconds}s`;
@@ -93,9 +65,8 @@ const History = () => {
   };
 
   const filteredData = seizureHistory.filter(record => {
-    const typeMatch = selectedType === 'all' || record.type === selectedType;
     const dateMatch = !dateFilter || record.date.toISOString().slice(0, 10) === dateFilter;
-    return typeMatch && dateMatch;
+    return dateMatch;
   });
 
   return (
@@ -108,7 +79,7 @@ const History = () => {
         </Button>
       </div>
 
-      {/* Filtres */}
+      {/* Filtres simplifiés */}
       <Card className="medical-card">
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -117,23 +88,7 @@ const History = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Type de crise</label>
-              <Select value={selectedType} onValueChange={setSelectedType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Tous les types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les types</SelectItem>
-                  <SelectItem value="ictal">Ictale</SelectItem>
-                  <SelectItem value="preictal">Pré-Ictale</SelectItem>
-                  <SelectItem value="postictal">Post-Ictale</SelectItem>
-                  <SelectItem value="interictal">Inter-Ictale</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Date</label>
               <div className="relative">
@@ -150,10 +105,7 @@ const History = () => {
             <div className="flex items-end">
               <Button 
                 variant="outline" 
-                onClick={() => {
-                  setSelectedType('all');
-                  setDateFilter('');
-                }}
+                onClick={() => setDateFilter('')}
                 className="w-full"
               >
                 Réinitialiser
@@ -163,32 +115,14 @@ const History = () => {
         </CardContent>
       </Card>
 
-      {/* Statistiques rapides */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Statistiques rapides - simplifiées */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="medical-card">
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-red-600">
-              {seizureHistory.filter(r => r.type === 'ictal').length}
+              {seizureHistory.length}
             </div>
-            <div className="text-sm text-gray-600">Crises Ictales</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="medical-card">
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-yellow-600">
-              {seizureHistory.filter(r => r.type === 'preictal').length}
-            </div>
-            <div className="text-sm text-gray-600">Pré-Ictales</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="medical-card">
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-blue-600">
-              {seizureHistory.filter(r => r.type === 'postictal').length}
-            </div>
-            <div className="text-sm text-gray-600">Post-Ictales</div>
+            <div className="text-sm text-gray-600">Crises Détectées</div>
           </CardContent>
         </Card>
         
@@ -200,9 +134,18 @@ const History = () => {
             <div className="text-sm text-gray-600">Confiance Moyenne</div>
           </CardContent>
         </Card>
+
+        <Card className="medical-card">
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-green-600">
+              {seizureHistory.filter(r => r.acknowledged).length}
+            </div>
+            <div className="text-sm text-gray-600">Acquittées</div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Tableau des crises */}
+      {/* Tableau des crises - simplifié */}
       <Card className="medical-card">
         <CardHeader>
           <CardTitle>Enregistrements ({filteredData.length})</CardTitle>
@@ -213,7 +156,7 @@ const History = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Date/Heure</TableHead>
-                  <TableHead>Type de Crise</TableHead>
+                  <TableHead>Événement</TableHead>
                   <TableHead>Durée</TableHead>
                   <TableHead>Confiance</TableHead>
                   <TableHead>Statut</TableHead>
@@ -234,8 +177,8 @@ const History = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={getTypeColor(record.type)}>
-                        {getTypeLabel(record.type)}
+                      <Badge className="bg-red-100 text-red-800">
+                        Crise Détectée
                       </Badge>
                     </TableCell>
                     <TableCell>{formatDuration(record.duration)}</TableCell>

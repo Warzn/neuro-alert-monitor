@@ -47,8 +47,7 @@ const EEGChart: React.FC<EEGChartProps> = ({ isRealTime = true, duration = 30 })
         time: new Date(timestamp).toLocaleTimeString('fr-FR', { 
           hour12: false, 
           minute: '2-digit', 
-          second: '2-digit',
-          fractionalSecondDigits: 1 
+          second: '2-digit'
         })
       });
     }
@@ -63,8 +62,7 @@ const EEGChart: React.FC<EEGChartProps> = ({ isRealTime = true, duration = 30 })
         time: new Date(timestamp).toLocaleTimeString('fr-FR', { 
           hour12: false, 
           minute: '2-digit', 
-          second: '2-digit',
-          fractionalSecondDigits: 1 
+          second: '2-digit'
         })
       };
 
@@ -91,7 +89,9 @@ const EEGChart: React.FC<EEGChartProps> = ({ isRealTime = true, duration = 30 })
   };
 
   return (
-    <div className="medical-card rounded-lg p-6">
+    <div className="medical-card rounded-lg p-6" style={{ 
+      background: 'linear-gradient(180deg, #FAFBFC 0%, #F8F9FA 100%)' 
+    }}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-800">
           Signal EEG en Temps Réel
@@ -108,7 +108,11 @@ const EEGChart: React.FC<EEGChartProps> = ({ isRealTime = true, duration = 30 })
       <div style={{ width: '100%', height: '400px' }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e0e4e7" />
+            <CartesianGrid 
+              strokeDasharray="3 3" 
+              stroke="#E1E5E9" 
+              strokeWidth={1}
+            />
             <XAxis 
               dataKey="time"
               tickFormatter={formatXAxisTick}
@@ -117,7 +121,7 @@ const EEGChart: React.FC<EEGChartProps> = ({ isRealTime = true, duration = 30 })
               interval="preserveStartEnd"
             />
             <YAxis 
-              domain={[-100, 100]}
+              domain={[-150, 150]}
               stroke="#64748b"
               fontSize={12}
               label={{ value: 'Amplitude (μV)', angle: -90, position: 'insideLeft' }}
