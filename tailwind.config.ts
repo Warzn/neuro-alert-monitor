@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,16 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Couleurs médicales personnalisées
+				'medical-blue': 'hsl(var(--medical-blue))',
+				'mint-green': 'hsl(var(--mint-green))',
+				'coral-red': 'hsl(var(--coral-red))',
+				'soft-orange': 'hsl(var(--soft-orange))',
+				'off-white': 'hsl(var(--off-white))',
+				'light-gray': 'hsl(var(--light-gray))',
+				'dark-gray': 'hsl(var(--dark-gray))',
+				'border-gray': 'hsl(var(--border-gray))'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,11 +94,31 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'slide-in-from-top': {
+					from: {
+						transform: 'translateY(-100%)',
+						opacity: '0'
+					},
+					to: {
+						transform: 'translateY(0)',
+						opacity: '1'
+					}
+				},
+				'pulse': {
+					'0%, 100%': {
+						opacity: '1'
+					},
+					'50%': {
+						opacity: '0.5'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'slide-in-from-top': 'slide-in-from-top 0.5s ease-out',
+				'pulse': 'pulse 2s infinite'
 			}
 		}
 	},

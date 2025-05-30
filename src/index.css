@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 214 65% 59%; /* Bleu médical #4A90E2 */
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -34,59 +35,37 @@
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Couleurs médicales personnalisées */
+    --medical-blue: 214 65% 59%; /* #4A90E2 */
+    --mint-green: 93 67% 64%; /* #7ED321 */
+    --coral-red: 0 83% 70%; /* #FF6B6B */
+    --soft-orange: 41 93% 56%; /* #F5A623 */
+    --off-white: 220 14% 98%; /* #FAFBFC */
+    --light-gray: 210 17% 97%; /* #F8F9FA */
+    --dark-gray: 210 29% 24%; /* #2C3E50 */
+    --border-gray: 210 16% 89%; /* #E1E5E9 */
   }
 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-
     --primary: 210 40% 98%;
     --primary-foreground: 222.2 47.4% 11.2%;
-
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -97,5 +76,79 @@
 
   body {
     @apply bg-background text-foreground;
+    background-color: hsl(var(--off-white));
+    color: hsl(var(--dark-gray));
   }
+}
+
+/* Classes personnalisées pour l'application médicale */
+.medical-bg {
+  background-color: hsl(var(--off-white));
+}
+
+.medical-card {
+  background-color: white;
+  border: 1px solid hsl(var(--border-gray));
+}
+
+.medical-blue {
+  color: hsl(var(--medical-blue));
+}
+
+.bg-medical-blue {
+  background-color: hsl(var(--medical-blue));
+}
+
+.mint-green {
+  color: hsl(var(--mint-green));
+}
+
+.bg-mint-green {
+  background-color: hsl(var(--mint-green));
+}
+
+.coral-red {
+  color: hsl(var(--coral-red));
+}
+
+.bg-coral-red {
+  background-color: hsl(var(--coral-red));
+}
+
+.soft-orange {
+  color: hsl(var(--soft-orange));
+}
+
+.bg-soft-orange {
+  background-color: hsl(var(--soft-orange));
+}
+
+/* Animation pour les alertes */
+@keyframes slideInFromTop {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.alert-animation {
+  animation: slideInFromTop 0.5s ease-out;
+}
+
+/* Point clignotant pour le status */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.status-pulse {
+  animation: pulse 2s infinite;
 }
