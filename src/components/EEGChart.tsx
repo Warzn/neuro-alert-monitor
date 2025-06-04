@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine, Area, AreaChart } from 'recharts';
 
@@ -120,14 +119,6 @@ const EEGChart: React.FC<EEGChartProps> = ({ isRealTime = true, duration = 30 })
           Signal EEG en Temps Réel
         </h3>
         <div className="flex items-center space-x-4 text-sm text-gray-600">
-          <span className="flex items-center">
-            <div className="w-2 h-2 bg-medical-blue rounded-full mr-1"></div>
-            Signal Principal
-          </span>
-          <span className="flex items-center">
-            <div className="w-2 h-2 bg-medical-blue/30 rounded-full mr-1"></div>
-            Enveloppe
-          </span>
           <span>Moyenne 23 canaux</span>
         </div>
       </div>
@@ -229,11 +220,6 @@ const EEGChart: React.FC<EEGChartProps> = ({ isRealTime = true, duration = 30 })
         <div className="flex items-center space-x-4">
           <span>📊 Fréquence: 256 Hz simulé</span>
           <span>⏱️ Fenêtre: {duration}s</span>
-          <span>🎯 Résolution: 20 FPS</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 bg-mint-green rounded-full animate-pulse"></div>
-          <span>Signal optimal</span>
         </div>
       </div>
     </div>

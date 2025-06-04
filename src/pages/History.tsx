@@ -5,12 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Download, Eye, FileText, Filter } from 'lucide-react';
+import { Calendar, Download, Filter } from 'lucide-react';
 
 interface SeizureRecord {
   id: string;
   date: Date;
-  duration: number; // en secondes
   confidence: number;
 }
 
@@ -22,41 +21,29 @@ const History = () => {
     {
       id: '1',
       date: new Date('2024-05-30T14:32:00'),
-      duration: 45,
       confidence: 95
     },
     {
       id: '2',
       date: new Date('2024-05-29T09:15:00'),
-      duration: 120,
       confidence: 87
     },
     {
       id: '3',
       date: new Date('2024-05-28T16:45:00'),
-      duration: 180,
       confidence: 92
     },
     {
       id: '4',
       date: new Date('2024-05-27T11:20:00'),
-      duration: 38,
       confidence: 89
     },
     {
       id: '5',
       date: new Date('2024-05-26T13:55:00'),
-      duration: 60,
       confidence: 76
     }
   ];
-
-  const formatDuration = (seconds: number) => {
-    if (seconds < 60) return `${seconds}s`;
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}m ${remainingSeconds}s`;
-  };
 
   const filteredData = seizureHistory.filter(record => {
     const dateMatch = !dateFilter || record.date.toISOString().slice(0, 10) === dateFilter;
@@ -139,7 +126,7 @@ const History = () => {
         </Card>
       </div>
 
-      {/* Tableau des crises - sans colonne statut */}
+      {/* Tableau des crises - sans colonnes durée et actions */}
       <Card className="medical-card">
         <CardHeader>
           <CardTitle>Enregistrements ({filteredData.length})</CardTitle>
@@ -151,9 +138,7 @@ const History = () => {
                 <TableRow>
                   <TableHead>Date/Heure</TableHead>
                   <TableHead>Événement</TableHead>
-                  <TableHead>Durée</TableHead>
                   <TableHead>Confiance</TableHead>
-                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -174,7 +159,6 @@ const History = () => {
                         Crise Détectée
                       </Badge>
                     </TableCell>
-                    <TableCell>{formatDuration(record.duration)}</TableCell>
                     <TableCell>
                       <div className="flex items-center">
                         <div className="text-sm font-medium">{record.confidence}%</div>
@@ -184,16 +168,6 @@ const History = () => {
                             style={{ width: `${record.confidence}%` }}
                           ></div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Button variant="outline" size="sm">
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <FileText className="w-4 h-4" />
-                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>

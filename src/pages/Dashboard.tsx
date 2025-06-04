@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import EEGChart from '@/components/EEGChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -155,10 +154,6 @@ const Dashboard = () => {
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Durée segment:</span>
               <span className="text-sm font-medium">15 secondes</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Algorithme:</span>
-              <span className="text-sm font-medium">IA v2.1</span>
             </div>
           </CardContent>
         </Card>
