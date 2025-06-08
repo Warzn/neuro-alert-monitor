@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -91,7 +90,7 @@ const Layout = () => {
                 <span className="text-gray-600">Connexion Jetson: Active</span>
               </div>
               <div className="text-gray-600">
-                Dernière réception: {new Date().toLocaleTimeString('fr-FR')}
+                EDF: 256 Hz - Réception continue
               </div>
             </div>
             <div className="text-gray-600">

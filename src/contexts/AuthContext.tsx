@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser({
         id: 1,
         email: 'docteur@medical.com',
-        fullName: 'Dr. Martin Durand'
+        fullName: 'Nada'
       });
     }
     setIsLoading(false);
@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userData = {
         id: 1,
         email: email,
-        fullName: 'Dr. Martin Durand'
+        fullName: 'Nada'
       };
       
       setUser(userData);
