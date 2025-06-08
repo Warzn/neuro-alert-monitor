@@ -101,7 +101,7 @@ class JetsonTCPService {
           type: 'seizure_detected',
           confidence: data.confidence || 0,
           timestamp: new Date(data.timestamp || Date.now()),
-          message: `Crise détectée avec ${data.confidence}% de confiance`,
+          message: `🚨 CRISE DÉTECTÉE - Confiance: ${data.confidence}%${data.severity ? ` - Sévérité: ${data.severity}` : ''}`,
           data: data
         };
       } else if (data.type === 'status') {
@@ -111,11 +111,18 @@ class JetsonTCPService {
           message: data.message || 'Statut système mis à jour',
           data: data
         };
+      } else if (data.type === 'error') {
+        alert = {
+          type: 'error',
+          timestamp: new Date(data.timestamp || Date.now()),
+          message: `⚠️ ${data.message || 'Erreur système'}${data.error_code ? ` (${data.error_code})` : ''}`,
+          data: data
+        };
       } else {
         alert = {
           type: 'error',
           timestamp: new Date(data.timestamp || Date.now()),
-          message: data.message || 'Message inconnu du Jetson',
+          message: 'Message inconnu du Jetson',
           data: data
         };
       }
