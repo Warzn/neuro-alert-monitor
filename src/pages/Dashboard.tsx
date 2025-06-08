@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import EEGChart from '@/components/EEGChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,36 +6,80 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { AlertTriangle, Signal, Wifi, X, Activity } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { jetsonService, JetsonAlert } from '@/services/JetsonTCPService';
 
 interface SeizureAlert {
   id: string;
   timestamp: Date;
   confidence: number;
+  source: 'jetson' | 'local';
 }
 
 const Dashboard = () => {
   const [signalQuality, setSignalQuality] = useState(85);
   const [avgAmplitude, setAvgAmplitude] = useState(45);
   const [currentAlert, setCurrentAlert] = useState<SeizureAlert | null>(null);
+  const [jetsonStatus, setJetsonStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('disconnected');
+  const [lastEDFUpdate, setLastEDFUpdate] = useState<Date>(new Date());
+
+  // Configuration du service Jetson
+  useEffect(() => {
+    jetsonService.setCallbacks({
+      onAlert: (alert: JetsonAlert) => {
+        if (alert.type === 'seizure_detected') {
+          setCurrentAlert({
+            id: Date.now().toString(),
+            timestamp: alert.timestamp,
+            confidence: alert.confidence || 0,
+            source: 'jetson'
+          });
+        }
+      },
+      onStatusChange: (status) => {
+        setJetsonStatus(status);
+      },
+      onError: (error) => {
+        console.error('Erreur Jetson:', error);
+      }
+    });
+
+    // Démarrer la connexion
+    jetsonService.connect();
+
+    return () => {
+      jetsonService.disconnect();
+    };
+  }, []);
 
   // Simulation des métriques
   useEffect(() => {
     const interval = setInterval(() => {
       setSignalQuality(prev => Math.max(60, Math.min(100, prev + (Math.random() - 0.5) * 10)));
       setAvgAmplitude(prev => Math.max(20, Math.min(80, prev + (Math.random() - 0.5) * 8)));
-      
-      // Simulation d'alerte (très rare)
-      if (Math.random() < 0.001) { // 0.1% de chance
-        setCurrentAlert({
-          id: Date.now().toString(),
-          timestamp: new Date(),
-          confidence: Math.round(Math.random() * 30 + 70) // 70-100%
-        });
-      }
     }, 2000);
 
     return () => clearInterval(interval);
   }, []);
+
+  // Gestionnaire de données EDF reçues
+  const handleEDFData = (samples: number[]) => {
+    setLastEDFUpdate(new Date());
+    
+    // Calculer l'amplitude moyenne des nouveaux échantillons
+    const avg = samples.reduce((sum, sample) => sum + Math.abs(sample), 0) / samples.length;
+    setAvgAmplitude(Math.round(avg));
+    
+    // Simuler une alerte locale basée sur les données EDF (rare)
+    const maxAmplitude = Math.max(...samples.map(s => Math.abs(s)));
+    if (maxAmplitude > 120 && Math.random() < 0.001) {
+      setCurrentAlert({
+        id: Date.now().toString(),
+        timestamp: new Date(),
+        confidence: Math.round(85 + Math.random() * 15),
+        source: 'local'
+      });
+    }
+  };
 
   const handleAcknowledgeAlert = () => {
     setCurrentAlert(null);
@@ -46,9 +91,27 @@ const Dashboard = () => {
     return 'bg-coral-red';
   };
 
+  const getJetsonStatusColor = () => {
+    switch (jetsonStatus) {
+      case 'connected': return 'mint-green';
+      case 'connecting': return 'soft-orange';
+      case 'error': return 'coral-red';
+      default: return 'gray-400';
+    }
+  };
+
+  const getJetsonStatusText = () => {
+    switch (jetsonStatus) {
+      case 'connected': return 'Jetson Connecté';
+      case 'connecting': return 'Connexion...';
+      case 'error': return 'Erreur Jetson';
+      default: return 'Jetson Hors ligne';
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Alerte de crise simplifiée */}
+      {/* Alerte de crise */}
       {currentAlert && (
         <div className="alert-animation">
           <Alert className="bg-coral-red/10 border-coral-red">
@@ -57,7 +120,7 @@ const Dashboard = () => {
               <div>
                 <strong className="coral-red">🚨 CRISE DÉTECTÉE</strong>
                 <div className="mt-1">
-                  Une activité épileptique a été détectée | 
+                  Source: {currentAlert.source === 'jetson' ? 'Jetson Nano' : 'Analyse EDF'} | 
                   Confiance: {currentAlert.confidence}% | 
                   Heure: {currentAlert.timestamp.toLocaleTimeString('fr-FR')}
                 </div>
@@ -76,10 +139,10 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Graphique EEG */}
-      <EEGChart isRealTime={true} duration={30} />
+      {/* Graphique EEG avec données EDF */}
+      <EEGChart isRealTime={true} duration={30} onEDFData={handleEDFData} />
 
-      {/* Métriques en temps réel - simplifiées */}
+      {/* Métriques en temps réel */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Qualité du signal */}
         <Card className="medical-card">
@@ -110,33 +173,35 @@ const Dashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold">{Math.round(avgAmplitude)} μV</div>
             <p className="text-xs text-muted-foreground">
-              Signal dans la plage normale
+              Canal surrogate EDF
             </p>
           </CardContent>
         </Card>
 
-        {/* Statut connexion */}
+        {/* Statut Jetson */}
         <Card className="medical-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Statut Système</CardTitle>
-            <Wifi className="h-4 w-4 mint-green" />
+            <CardTitle className="text-sm font-medium">Statut Jetson</CardTitle>
+            <Wifi className={`h-4 w-4 ${getJetsonStatusColor()}`} />
           </CardHeader>
           <CardContent>
             <div className="flex items-center">
-              <div className="w-3 h-3 bg-mint-green rounded-full status-pulse mr-2"></div>
-              <span className="text-sm font-medium">Connecté</span>
+              <div className={`w-3 h-3 bg-${getJetsonStatusColor()} rounded-full mr-2 ${
+                jetsonStatus === 'connecting' ? 'animate-pulse' : jetsonStatus === 'connected' ? 'status-pulse' : ''
+              }`}></div>
+              <span className="text-sm font-medium">{getJetsonStatusText()}</span>
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              Jetson Nano en ligne
+              TCP: localhost:8080
             </p>
             <p className="text-xs text-muted-foreground">
-              Dernière donnée: Il y a 2s
+              EDF: {lastEDFUpdate.toLocaleTimeString('fr-FR')}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Informations additionnelles */}
+      {/* Informations système */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="medical-card">
           <CardHeader>
@@ -144,16 +209,20 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Canaux EEG:</span>
-              <span className="text-sm font-medium">23 canaux actifs</span>
+              <span className="text-sm text-gray-600">Canal EEG:</span>
+              <span className="text-sm font-medium">Surrogate</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Fréquence d'échantillonnage:</span>
               <span className="text-sm font-medium">256 Hz</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Durée segment:</span>
-              <span className="text-sm font-medium">15 secondes</span>
+              <span className="text-sm text-gray-600">Source données:</span>
+              <span className="text-sm font-medium">Fichiers EDF PC</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Alertes:</span>
+              <span className="text-sm font-medium">Jetson TCP</span>
             </div>
           </CardContent>
         </Card>
@@ -169,16 +238,16 @@ const Dashboard = () => {
                 <span className="text-gray-500">09:15</span>
               </div>
               <div className="flex items-center justify-between py-2">
-                <span>Calibration terminée</span>
-                <span className="text-gray-500">09:18</span>
+                <span>Connexion Jetson</span>
+                <span className="text-gray-500">{jetsonStatus === 'connected' ? '09:18' : 'En cours...'}</span>
               </div>
               <div className="flex items-center justify-between py-2">
-                <span>Monitoring actif</span>
+                <span>Réception EDF active</span>
                 <span className="text-gray-500">09:20</span>
               </div>
               <div className="flex items-center justify-between py-2">
-                <span className="mint-green">Signal optimal détecté</span>
-                <span className="text-gray-500">09:25</span>
+                <span className="mint-green">Monitoring actif</span>
+                <span className="text-gray-500">{lastEDFUpdate.toLocaleTimeString('fr-FR')}</span>
               </div>
             </div>
           </CardContent>
