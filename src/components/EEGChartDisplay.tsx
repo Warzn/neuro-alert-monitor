@@ -24,6 +24,7 @@ const EEGChartDisplay: React.FC<EEGChartDisplayProps> = ({ data }) => {
             tickLine={false}
             tick={false}
             label={false}
+            width={0}
           />
           <ReferenceLine y={0} stroke="#E2E8F0" strokeDasharray="2 2" />
           <ReferenceLine y={100} stroke="#FED7D7" strokeDasharray="1 1" />
