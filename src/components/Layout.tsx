@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -88,9 +89,6 @@ const Layout = () => {
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-mint-green rounded-full status-pulse mr-2"></div>
                 <span className="text-gray-600">Connexion Jetson: Active</span>
-              </div>
-              <div className="text-gray-600">
-                EDF: 256 Hz - Réception continue
               </div>
             </div>
             <div className="text-gray-600">

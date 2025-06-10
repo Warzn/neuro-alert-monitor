@@ -1,9 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import EEGChart from '@/components/EEGChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { AlertTriangle, Signal, Wifi, X, Activity } from 'lucide-react';
+import { AlertTriangle, Wifi, X } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { jetsonService, JetsonAlert } from '@/services/JetsonTCPService';
 
@@ -15,8 +15,6 @@ interface SeizureAlert {
 }
 
 const Dashboard = () => {
-  const [signalQuality, setSignalQuality] = useState(85);
-  const [avgAmplitude, setAvgAmplitude] = useState(45);
   const [currentAlert, setCurrentAlert] = useState<SeizureAlert | null>(null);
   const [jetsonStatus, setJetsonStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('disconnected');
   const [lastEDFUpdate, setLastEDFUpdate] = useState<Date>(new Date());
@@ -50,24 +48,8 @@ const Dashboard = () => {
     };
   }, []);
 
-  // Simulation des métriques
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSignalQuality(prev => Math.max(60, Math.min(100, prev + (Math.random() - 0.5) * 10)));
-      setAvgAmplitude(prev => Math.max(20, Math.min(80, prev + (Math.random() - 0.5) * 8)));
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, []);
-
   const handleAcknowledgeAlert = () => {
     setCurrentAlert(null);
-  };
-
-  const getSignalQualityColor = (quality: number) => {
-    if (quality >= 80) return 'bg-mint-green';
-    if (quality >= 60) return 'bg-soft-orange';
-    return 'bg-coral-red';
   };
 
   const getJetsonStatusColor = () => {
@@ -125,43 +107,8 @@ const Dashboard = () => {
         jetsonConnected={jetsonStatus === 'connected'} 
       />
 
-      {/* Métriques en temps réel */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Qualité du signal */}
-        <Card className="medical-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Qualité Signal</CardTitle>
-            <Signal className="h-4 w-4 medical-blue" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{Math.round(signalQuality)}%</div>
-            <div className="mt-2">
-              <Progress 
-                value={signalQuality} 
-                className={`h-2 ${getSignalQualityColor(signalQuality)}`}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {signalQuality >= 80 ? 'Excellent' : signalQuality >= 60 ? 'Bon' : 'Faible'}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Amplitude Moyenne */}
-        <Card className="medical-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Amplitude Moy</CardTitle>
-            <Activity className="h-4 w-4 medical-blue" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{Math.round(avgAmplitude)} μV</div>
-            <p className="text-xs text-muted-foreground">
-              Canal surrogate EDF
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Statut Jetson */}
+      {/* Statut Jetson uniquement */}
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-6 max-w-md">
         <Card className="medical-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Statut Jetson</CardTitle>
@@ -184,32 +131,8 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      {/* Informations système */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="medical-card">
-          <CardHeader>
-            <CardTitle className="text-lg">Configuration Actuelle</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Canal EEG:</span>
-              <span className="text-sm font-medium">Surrogate</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Fréquence d'échantillonnage:</span>
-              <span className="text-sm font-medium">256 Hz</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Source données:</span>
-              <span className="text-sm font-medium">Fichiers EDF PC</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Alertes:</span>
-              <span className="text-sm font-medium">Jetson TCP</span>
-            </div>
-          </CardContent>
-        </Card>
-
+      {/* Activité Récente uniquement */}
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-6 max-w-md">
         <Card className="medical-card">
           <CardHeader>
             <CardTitle className="text-lg">Activité Récente</CardTitle>

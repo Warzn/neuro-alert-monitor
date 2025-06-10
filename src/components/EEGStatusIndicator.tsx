@@ -41,9 +41,6 @@ const EEGStatusIndicator: React.FC<EEGStatusIndicatorProps> = ({
           {getStatusText()}
         </div>
       </div>
-      <div className="text-sm text-gray-600">
-        Canal: Simulé | 256 Hz
-      </div>
     </div>
   );
 };

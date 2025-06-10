@@ -96,7 +96,7 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
         {jetsonConnected ? (
           <span>🔄 Signal EEG simulé en temps réel</span>
         ) : (
-          <span>⚠️ Connectez le Jetson pour voir le signal EEG</span>
+          <span></span>
         )}
       </div>
     </div>
