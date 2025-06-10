@@ -4,30 +4,21 @@ import { EEGDataPoint, EEGChartProps } from '@/types/eeg';
 import { useEDFProcessor } from '@/hooks/useEDFProcessor';
 import EEGChartDisplay from './EEGChartDisplay';
 import EEGStatusIndicator from './EEGStatusIndicator';
-import EEGFooterControls from './EEGFooterControls';
 
-const EEGChart: React.FC<EEGChartProps> = ({ isRealTime = true, duration = 30, onEDFData }) => {
+interface EEGChartPropsExtended extends EEGChartProps {
+  jetsonConnected?: boolean;
+}
+
+const EEGChart: React.FC<EEGChartPropsExtended> = ({ 
+  isRealTime = true, 
+  duration = 30, 
+  jetsonConnected = false 
+}) => {
   const [data, setData] = useState<EEGDataPoint[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const sampleCountRef = useRef(0);
 
-  const { edfProcessingStatus, processEDFData, convertSamplesToDataPoints, generateFakeEEGSignal } = useEDFProcessor();
-
-  // Handle EDF file upload
-  const handleEDFFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result instanceof ArrayBuffer) {
-        const samples = processEDFData(event.target.result);
-        if (samples.length > 0) {
-          const newDataPoints = convertSamplesToDataPoints(samples, duration);
-          updateDataWithNewPoints(newDataPoints);
-          onEDFData?.(samples);
-        }
-      }
-    };
-    reader.readAsArrayBuffer(file);
-  };
+  const { edfProcessingStatus, generateFakeEEGSignal, convertSamplesToDataPoints } = useEDFProcessor();
 
   // Update data and maintain sliding window
   const updateDataWithNewPoints = (newDataPoints: EEGDataPoint[]) => {
@@ -39,9 +30,19 @@ const EEGChart: React.FC<EEGChartProps> = ({ isRealTime = true, duration = 30, o
   };
 
   useEffect(() => {
-    if (!isRealTime) return;
+    // Clear any existing interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
 
-    // Initialize with beautiful fake data
+    // Only show signal when Jetson is connected
+    if (!jetsonConnected || !isRealTime) {
+      setData([]); // Clear data when not connected
+      return;
+    }
+
+    // Initialize with fake data when Jetson connects
     const initialData: EEGDataPoint[] = [];
     const now = Date.now();
     const initialSamples = generateFakeEEGSignal(0, duration * 256);
@@ -63,13 +64,12 @@ const EEGChart: React.FC<EEGChartProps> = ({ isRealTime = true, duration = 30, o
     
     setData(initialData);
 
-    // Generate new data every second
+    // Generate new fake data every second when connected
     intervalRef.current = setInterval(() => {
       sampleCountRef.current += 256;
       const samples = generateFakeEEGSignal(sampleCountRef.current, 256);
       const newDataPoints = convertSamplesToDataPoints(samples, duration);
       updateDataWithNewPoints(newDataPoints);
-      onEDFData?.(samples);
     }, 1000);
 
     return () => {
@@ -77,7 +77,7 @@ const EEGChart: React.FC<EEGChartProps> = ({ isRealTime = true, duration = 30, o
         clearInterval(intervalRef.current);
       }
     };
-  }, [isRealTime, duration, generateFakeEEGSignal, convertSamplesToDataPoints, onEDFData]);
+  }, [jetsonConnected, isRealTime, duration, generateFakeEEGSignal, convertSamplesToDataPoints]);
 
   return (
     <div className="medical-card rounded-lg p-6 shadow-lg" style={{ 
@@ -85,17 +85,20 @@ const EEGChart: React.FC<EEGChartProps> = ({ isRealTime = true, duration = 30, o
       border: '1px solid #E1E5E9'
     }}>
       <EEGStatusIndicator 
-        edfProcessingStatus={edfProcessingStatus}
+        edfProcessingStatus={jetsonConnected ? 'waiting' : 'error'}
         duration={duration}
-        onFileUpload={handleEDFFile}
+        onFileUpload={() => {}} // Disabled file upload
       />
       
       <EEGChartDisplay data={data} />
       
-      <EEGFooterControls 
-        duration={duration}
-        onFileUpload={handleEDFFile}
-      />
+      <div className="mt-4 flex items-center justify-center text-sm text-gray-500 bg-gray-50/50 p-3 rounded-lg">
+        {jetsonConnected ? (
+          <span>🔄 Signal EEG simulé en temps réel</span>
+        ) : (
+          <span>⚠️ Connectez le Jetson pour voir le signal EEG</span>
+        )}
+      </div>
     </div>
   );
 };

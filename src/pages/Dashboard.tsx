@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import EEGChart from '@/components/EEGChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -61,26 +60,6 @@ const Dashboard = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Gestionnaire de données EDF reçues
-  const handleEDFData = (samples: number[]) => {
-    setLastEDFUpdate(new Date());
-    
-    // Calculer l'amplitude moyenne des nouveaux échantillons
-    const avg = samples.reduce((sum, sample) => sum + Math.abs(sample), 0) / samples.length;
-    setAvgAmplitude(Math.round(avg));
-    
-    // Simuler une alerte locale basée sur les données EDF (rare)
-    const maxAmplitude = Math.max(...samples.map(s => Math.abs(s)));
-    if (maxAmplitude > 120 && Math.random() < 0.001) {
-      setCurrentAlert({
-        id: Date.now().toString(),
-        timestamp: new Date(),
-        confidence: Math.round(85 + Math.random() * 15),
-        source: 'local'
-      });
-    }
-  };
-
   const handleAcknowledgeAlert = () => {
     setCurrentAlert(null);
   };
@@ -139,8 +118,12 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Graphique EEG avec données EDF */}
-      <EEGChart isRealTime={true} duration={30} onEDFData={handleEDFData} />
+      {/* Graphique EEG avec signal simulé basé sur connexion Jetson */}
+      <EEGChart 
+        isRealTime={true} 
+        duration={30} 
+        jetsonConnected={jetsonStatus === 'connected'} 
+      />
 
       {/* Métriques en temps réel */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

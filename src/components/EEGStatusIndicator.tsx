@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Activity, Upload } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import { EDFProcessingStatus } from '@/types/eeg';
 
 interface EEGStatusIndicatorProps {
@@ -25,7 +25,7 @@ const EEGStatusIndicator: React.FC<EEGStatusIndicatorProps> = ({
   const getStatusText = () => {
     switch (edfProcessingStatus) {
       case 'processing': return 'Traitement en cours...';
-      case 'error': return 'Erreur de traitement';
+      case 'error': return 'Signal EEG inactif';
       default: return 'Signal EEG actif';
     }
   };
@@ -42,7 +42,7 @@ const EEGStatusIndicator: React.FC<EEGStatusIndicatorProps> = ({
         </div>
       </div>
       <div className="text-sm text-gray-600">
-        Canal: Surrogate | 256 Hz
+        Canal: Simulé | 256 Hz
       </div>
     </div>
   );
