@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import EEGChart from '@/components/EEGChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -124,38 +123,6 @@ const Dashboard = () => {
             <p className="text-xs text-muted-foreground mt-2">
               TCP: localhost:8080
             </p>
-            <p className="text-xs text-muted-foreground">
-              EDF: {lastEDFUpdate.toLocaleTimeString('fr-FR')}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Activité Récente uniquement */}
-      <div className="grid grid-cols-1 md:grid-cols-1 gap-6 max-w-md">
-        <Card className="medical-card">
-          <CardHeader>
-            <CardTitle className="text-lg">Activité Récente</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="text-sm">
-              <div className="flex items-center justify-between py-2">
-                <span>Système démarré</span>
-                <span className="text-gray-500">09:15</span>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span>Connexion Jetson</span>
-                <span className="text-gray-500">{jetsonStatus === 'connected' ? '09:18' : 'En cours...'}</span>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span>Réception EDF active</span>
-                <span className="text-gray-500">09:20</span>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span className="mint-green">Monitoring actif</span>
-                <span className="text-gray-500">{lastEDFUpdate.toLocaleTimeString('fr-FR')}</span>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>

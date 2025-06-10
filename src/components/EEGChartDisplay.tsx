@@ -22,8 +22,8 @@ const EEGChartDisplay: React.FC<EEGChartDisplayProps> = ({ data }) => {
             domain={[-150, 150]}
             axisLine={false} 
             tickLine={false}
-            tick={{ fontSize: 11, fill: '#666' }}
-            label={{ value: 'Amplitude (μV)', angle: -90, position: 'insideLeft' }}
+            tick={false}
+            label={false}
           />
           <ReferenceLine y={0} stroke="#E2E8F0" strokeDasharray="2 2" />
           <ReferenceLine y={100} stroke="#FED7D7" strokeDasharray="1 1" />
