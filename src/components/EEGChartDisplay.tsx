@@ -12,20 +12,8 @@ const EEGChartDisplay: React.FC<EEGChartDisplayProps> = ({ data }) => {
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
-          <XAxis 
-            dataKey="time" 
-            axisLine={false} 
-            tickLine={false}
-            tick={{ fontSize: 11, fill: '#666' }}
-          />
-          <YAxis 
-            domain={[-150, 150]}
-            axisLine={false} 
-            tickLine={false}
-            tick={false}
-            label={false}
-            width={0}
-          />
+          <XAxis hide />
+          <YAxis hide />
           <ReferenceLine y={0} stroke="#E2E8F0" strokeDasharray="2 2" />
           <ReferenceLine y={100} stroke="#FED7D7" strokeDasharray="1 1" />
           <ReferenceLine y={-100} stroke="#FED7D7" strokeDasharray="1 1" />

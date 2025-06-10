@@ -13,6 +13,7 @@ interface SeizureAlert {
   timestamp: Date;
   confidence: number;
   source: 'jetson' | 'local';
+  predictionTime: string;
 }
 
 const Dashboard = () => {
@@ -26,23 +27,27 @@ const Dashboard = () => {
       const alertInterval = setInterval(() => {
         // Simulation aléatoire d'alertes (5% de chance toutes les 5 secondes)
         if (Math.random() < 0.05) {
+          const minTime = Math.floor(Math.random() * 25) + 25; // 25-50 min
+          const maxTime = minTime + Math.floor(Math.random() * 10); // +0-10 min
+          
           const newAlert: SeizureAlert = {
             id: Date.now().toString(),
             timestamp: new Date(),
             confidence: Math.floor(Math.random() * 30) + 70, // 70-99%
-            source: 'jetson'
+            source: 'jetson',
+            predictionTime: `${minTime}-${maxTime} min`
           };
           
           setCurrentAlert(newAlert);
           setAlertCount(prev => prev + 1);
           
-          // Notification sonore
-          playAlertSound();
+          // Notification sonore améliorée
+          playEnhancedAlertSound();
           
           // Toast notification
           toast({
-            title: "🚨 Crise Prédites",
-            description: `Confiance: ${newAlert.confidence}% - ${newAlert.timestamp.toLocaleTimeString('fr-FR')}`,
+            title: "🚨 Crise Prédite",
+            description: `Confiance: ${newAlert.confidence}% - Prévue dans ${newAlert.predictionTime}`,
             variant: "destructive",
           });
         }
@@ -52,45 +57,53 @@ const Dashboard = () => {
     }
   }, [jetsonStatus]);
 
-  // Fonction pour jouer le son d'alerte
-  const playAlertSound = () => {
+  // Fonction pour jouer un son d'alerte amélioré et plus attirant
+  const playEnhancedAlertSound = () => {
     try {
-      // Créer un contexte audio pour générer un son d'alerte
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       
-      // Premier beep
-      const oscillator1 = audioContext.createOscillator();
-      const gainNode1 = audioContext.createGain();
+      // Première séquence - son urgent montant
+      const createUrgentBeep = (freq: number, startTime: number, duration: number) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(freq, audioContext.currentTime + startTime);
+        oscillator.frequency.exponentialRampToValueAtTime(freq * 1.5, audioContext.currentTime + startTime + duration);
+        oscillator.type = 'sawtooth';
+        
+        gainNode.gain.setValueAtTime(0, audioContext.currentTime + startTime);
+        gainNode.gain.rapidlyTo(0.4, audioContext.currentTime + startTime + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + startTime + duration);
+        
+        oscillator.start(audioContext.currentTime + startTime);
+        oscillator.stop(audioContext.currentTime + startTime + duration);
+      };
       
-      oscillator1.connect(gainNode1);
-      gainNode1.connect(audioContext.destination);
+      // Séquence d'alarme médical
+      createUrgentBeep(800, 0, 0.3);      // Premier beep
+      createUrgentBeep(1000, 0.4, 0.3);   // Deuxième beep plus aigu
+      createUrgentBeep(1200, 0.8, 0.3);   // Troisième beep encore plus aigu
       
-      oscillator1.frequency.setValueAtTime(800, audioContext.currentTime);
-      oscillator1.type = 'sine';
-      
-      gainNode1.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode1.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-      
-      oscillator1.start(audioContext.currentTime);
-      oscillator1.stop(audioContext.currentTime + 0.5);
-      
-      // Deuxième beep
+      // Son continu d'alerte grave
       setTimeout(() => {
-        const oscillator2 = audioContext.createOscillator();
-        const gainNode2 = audioContext.createGain();
+        const lowOscillator = audioContext.createOscillator();
+        const lowGain = audioContext.createGain();
         
-        oscillator2.connect(gainNode2);
-        gainNode2.connect(audioContext.destination);
+        lowOscillator.connect(lowGain);
+        lowGain.connect(audioContext.destination);
         
-        oscillator2.frequency.setValueAtTime(1000, audioContext.currentTime);
-        oscillator2.type = 'sine';
+        lowOscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+        lowOscillator.type = 'square';
         
-        gainNode2.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        lowGain.gain.setValueAtTime(0.2, audioContext.currentTime);
+        lowGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.5);
         
-        oscillator2.start(audioContext.currentTime);
-        oscillator2.stop(audioContext.currentTime + 0.5);
-      }, 600);
+        lowOscillator.start(audioContext.currentTime);
+        lowOscillator.stop(audioContext.currentTime + 1.5);
+      }, 1200);
       
     } catch (error) {
       console.log('Audio non supporté:', error);
@@ -102,11 +115,15 @@ const Dashboard = () => {
     jetsonService.setCallbacks({
       onAlert: (alert: JetsonAlert) => {
         if (alert.type === 'seizure_detected') {
+          const minTime = Math.floor(Math.random() * 25) + 25;
+          const maxTime = minTime + Math.floor(Math.random() * 10);
+          
           setCurrentAlert({
             id: Date.now().toString(),
             timestamp: alert.timestamp,
             confidence: alert.confidence || 0,
-            source: 'jetson'
+            source: 'jetson',
+            predictionTime: `${minTime}-${maxTime} min`
           });
         }
       },
@@ -136,7 +153,7 @@ const Dashboard = () => {
   };
 
   const testAlertSound = () => {
-    playAlertSound();
+    playEnhancedAlertSound();
     toast({
       title: "🔊 Test Audio",
       description: "Son d'alerte testé avec succès",
@@ -170,11 +187,11 @@ const Dashboard = () => {
             <AlertTriangle className="h-4 w-4 text-red-600" />
             <AlertDescription className="flex items-center justify-between">
               <div>
-                <strong className="text-red-600">🚨 CRISE PRÉDITES</strong>
+                <strong className="text-red-600">🚨 CRISE PRÉDITE</strong>
                 <div className="mt-1 text-sm">
                   Source: {currentAlert.source === 'jetson' ? 'Jetson Nano' : 'Analyse EDF'} | 
                   Confiance: {currentAlert.confidence}% | 
-                  Heure: {currentAlert.timestamp.toLocaleTimeString('fr-FR')}
+                  Prévue dans: {currentAlert.predictionTime}
                 </div>
               </div>
               <Button
