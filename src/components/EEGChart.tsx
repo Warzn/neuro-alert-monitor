@@ -20,21 +20,21 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
 
   const { edfProcessingStatus } = useEDFProcessor();
 
-  // Signal périodique simple (onde sinusoïdale)
+  // Signal périodique simple (onde sinusoïdale à basse fréquence)
   const generateSimplePeriodicSignal = (startSample: number, numSamples: number): number[] => {
     const samples: number[] = [];
     const sampleRate = 256; // 256 Hz
-    const frequency = 2; // 2 Hz - fréquence simple
+    const frequency = 0.5; // 0.5 Hz - fréquence très basse (un cycle toutes les 2 secondes)
     const amplitude = 50; // Amplitude fixe
     
     for (let i = 0; i < numSamples; i++) {
       const t = (startSample + i) / sampleRate;
       
-      // Signal sinusoïdal simple
+      // Signal sinusoïdal simple à basse fréquence
       const signal = amplitude * Math.sin(2 * Math.PI * frequency * t);
       
       // Léger bruit pour le réalisme
-      const noise = (Math.random() - 0.5) * 5;
+      const noise = (Math.random() - 0.5) * 3;
       
       const finalAmplitude = signal + noise;
       samples.push(Math.max(-100, Math.min(100, finalAmplitude)));
