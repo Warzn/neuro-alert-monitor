@@ -20,24 +20,30 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
 
   const { edfProcessingStatus } = useEDFProcessor();
 
-  // Signal périodique simple (onde sinusoïdale à basse fréquence)
+  // Signal périodique simple et naturel
   const generateSimplePeriodicSignal = (startSample: number, numSamples: number): number[] => {
     const samples: number[] = [];
     const sampleRate = 256; // 256 Hz
-    const frequency = 0.5; // 0.5 Hz - fréquence très basse (un cycle toutes les 2 secondes)
-    const amplitude = 50; // Amplitude fixe
+    const baseFrequency = 0.3; // 0.3 Hz - fréquence de base
+    const amplitude = 30; // Amplitude plus réduite
     
     for (let i = 0; i < numSamples; i++) {
       const t = (startSample + i) / sampleRate;
       
-      // Signal sinusoïdal simple à basse fréquence
-      const signal = amplitude * Math.sin(2 * Math.PI * frequency * t);
+      // Signal sinusoïdal principal
+      const mainSignal = amplitude * Math.sin(2 * Math.PI * baseFrequency * t);
       
-      // Léger bruit pour le réalisme
-      const noise = (Math.random() - 0.5) * 3;
+      // Ajouter une composante harmonique pour plus de naturel
+      const harmonic = 10 * Math.sin(2 * Math.PI * baseFrequency * 2 * t + Math.PI / 4);
       
-      const finalAmplitude = signal + noise;
-      samples.push(Math.max(-100, Math.min(100, finalAmplitude)));
+      // Variation lente de l'amplitude (breathing pattern)
+      const breathingPattern = 5 * Math.sin(2 * Math.PI * 0.1 * t);
+      
+      // Bruit minimal
+      const noise = (Math.random() - 0.5) * 2;
+      
+      const finalAmplitude = mainSignal + harmonic + breathingPattern + noise;
+      samples.push(Math.max(-60, Math.min(60, finalAmplitude)));
     }
     
     return samples;
