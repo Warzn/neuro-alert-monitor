@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { EEGDataPoint, EEGChartProps } from '@/types/eeg';
 import { useEDFProcessor } from '@/hooks/useEDFProcessor';
@@ -20,30 +19,24 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
 
   const { edfProcessingStatus } = useEDFProcessor();
 
-  // Signal périodique simple et naturel
+  // Signal simple et fluide
   const generateSimplePeriodicSignal = (startSample: number, numSamples: number): number[] => {
     const samples: number[] = [];
     const sampleRate = 256; // 256 Hz
-    const baseFrequency = 0.3; // 0.3 Hz - fréquence de base
-    const amplitude = 30; // Amplitude plus réduite
+    const frequency = 0.8; // 0.8 Hz - fréquence modérée
+    const amplitude = 25; // Amplitude modérée
     
     for (let i = 0; i < numSamples; i++) {
       const t = (startSample + i) / sampleRate;
       
-      // Signal sinusoïdal principal
-      const mainSignal = amplitude * Math.sin(2 * Math.PI * baseFrequency * t);
+      // Signal sinusoïdal simple et lisse
+      const signal = amplitude * Math.sin(2 * Math.PI * frequency * t);
       
-      // Ajouter une composante harmonique pour plus de naturel
-      const harmonic = 10 * Math.sin(2 * Math.PI * baseFrequency * 2 * t + Math.PI / 4);
+      // Très léger bruit pour éviter une ligne parfaite
+      const noise = (Math.random() - 0.5) * 1;
       
-      // Variation lente de l'amplitude (breathing pattern)
-      const breathingPattern = 5 * Math.sin(2 * Math.PI * 0.1 * t);
-      
-      // Bruit minimal
-      const noise = (Math.random() - 0.5) * 2;
-      
-      const finalAmplitude = mainSignal + harmonic + breathingPattern + noise;
-      samples.push(Math.max(-60, Math.min(60, finalAmplitude)));
+      const finalAmplitude = signal + noise;
+      samples.push(Math.max(-40, Math.min(40, finalAmplitude)));
     }
     
     return samples;
