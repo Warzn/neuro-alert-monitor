@@ -20,31 +20,24 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
 
   const { edfProcessingStatus } = useEDFProcessor();
 
-  // Générateur de signal EEG avec basse fréquence (onde delta 1-4 Hz)
-  const generateLowFrequencyEEGSignal = (startSample: number, numSamples: number): number[] => {
+  // Signal périodique simple (onde sinusoïdale)
+  const generateSimplePeriodicSignal = (startSample: number, numSamples: number): number[] => {
     const samples: number[] = [];
     const sampleRate = 256; // 256 Hz
+    const frequency = 2; // 2 Hz - fréquence simple
+    const amplitude = 50; // Amplitude fixe
     
     for (let i = 0; i < numSamples; i++) {
       const t = (startSample + i) / sampleRate;
       
-      // Onde delta dominante (1-3 Hz) - caractéristique du sommeil profond
-      const deltaWave = 40 * Math.sin(2 * Math.PI * 2 * t);
+      // Signal sinusoïdal simple
+      const signal = amplitude * Math.sin(2 * Math.PI * frequency * t);
       
-      // Onde theta (4-8 Hz) - plus faible
-      const thetaWave = 15 * Math.sin(2 * Math.PI * 6 * t + Math.PI / 4);
+      // Léger bruit pour le réalisme
+      const noise = (Math.random() - 0.5) * 5;
       
-      // Onde alpha (8-12 Hz) - très faible
-      const alphaWave = 8 * Math.sin(2 * Math.PI * 10 * t + Math.PI / 2);
-      
-      // Bruit de fond très léger
-      const noise = (Math.random() - 0.5) * 3;
-      
-      // Modulation lente pour simuler la variabilité naturelle
-      const modulation = 1 + 0.3 * Math.sin(2 * Math.PI * 0.1 * t);
-      
-      const amplitude = (deltaWave + thetaWave + alphaWave + noise) * modulation;
-      samples.push(Math.max(-120, Math.min(120, amplitude)));
+      const finalAmplitude = signal + noise;
+      samples.push(Math.max(-100, Math.min(100, finalAmplitude)));
     }
     
     return samples;
@@ -58,7 +51,7 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
       return {
         timestamp,
         amplitude,
-        time: '', // Plus d'affichage d'heure
+        time: '',
         envelope_max: amplitude + 15,
         envelope_min: amplitude - 15
       };
@@ -83,14 +76,14 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
 
     // Only show signal when Jetson is connected
     if (!jetsonConnected || !isRealTime) {
-      setData([]); // Clear data when not connected
+      setData([]);
       return;
     }
 
-    // Initialize with fake data when Jetson connects
+    // Initialize with simple periodic data when Jetson connects
     const initialData: EEGDataPoint[] = [];
     const now = Date.now();
-    const initialSamples = generateLowFrequencyEEGSignal(0, duration * 256);
+    const initialSamples = generateSimplePeriodicSignal(0, duration * 256);
     
     initialSamples.forEach((amplitude, index) => {
       const timestamp = now - (duration * 1000) + (index * (1000 / 256));
@@ -105,10 +98,10 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
     
     setData(initialData);
 
-    // Generate new fake data every second when connected
+    // Generate new simple periodic data every second when connected
     intervalRef.current = setInterval(() => {
       sampleCountRef.current += 256;
-      const samples = generateLowFrequencyEEGSignal(sampleCountRef.current, 256);
+      const samples = generateSimplePeriodicSignal(sampleCountRef.current, 256);
       const newDataPoints = convertSamplesToDataPoints(samples);
       updateDataWithNewPoints(newDataPoints);
     }, 1000);
@@ -128,7 +121,7 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
       <EEGStatusIndicator 
         edfProcessingStatus={jetsonConnected ? 'waiting' : 'error'}
         duration={duration}
-        onFileUpload={() => {}} // Disabled file upload
+        onFileUpload={() => {}}
       />
       
       <EEGChartDisplay data={data} />

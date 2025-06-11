@@ -14,6 +14,7 @@ interface SeizureAlert {
   confidence: number;
   source: 'jetson' | 'local';
   predictionTime: string;
+  alertType: 'urgent' | 'warning'; // Type d'alerte
 }
 
 const Dashboard = () => {
@@ -21,21 +22,22 @@ const Dashboard = () => {
   const [jetsonStatus, setJetsonStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('disconnected');
   const [alertCount, setAlertCount] = useState(0);
 
-  // Simulation d'alertes
+  // Simulation d'alertes avec deux types
   useEffect(() => {
     if (jetsonStatus === 'connected') {
       const alertInterval = setInterval(() => {
         // Simulation aléatoire d'alertes (5% de chance toutes les 5 secondes)
         if (Math.random() < 0.05) {
-          const minTime = Math.floor(Math.random() * 25) + 25; // 25-50 min
-          const maxTime = minTime + Math.floor(Math.random() * 10); // +0-10 min
+          // Déterminer le type d'alerte (50% urgent, 50% warning)
+          const isUrgent = Math.random() < 0.5;
           
           const newAlert: SeizureAlert = {
             id: Date.now().toString(),
             timestamp: new Date(),
             confidence: Math.floor(Math.random() * 30) + 70, // 70-99%
             source: 'jetson',
-            predictionTime: `${minTime}-${maxTime} min`
+            predictionTime: isUrgent ? 'moins de 25 min' : 'moins de 50 min',
+            alertType: isUrgent ? 'urgent' : 'warning'
           };
           
           setCurrentAlert(newAlert);
@@ -44,9 +46,9 @@ const Dashboard = () => {
           // Notification sonore améliorée
           playEnhancedAlertSound();
           
-          // Toast notification
+          // Toast notification avec type d'alerte
           toast({
-            title: "🚨 Crise Prédite",
+            title: isUrgent ? "🚨 Crise Prédite - Urgent" : "⚠️ Crise Prédite - Attention",
             description: `Confiance: ${newAlert.confidence}% - Prévue dans ${newAlert.predictionTime}`,
             variant: "destructive",
           });
@@ -115,15 +117,15 @@ const Dashboard = () => {
     jetsonService.setCallbacks({
       onAlert: (alert: JetsonAlert) => {
         if (alert.type === 'seizure_detected') {
-          const minTime = Math.floor(Math.random() * 25) + 25;
-          const maxTime = minTime + Math.floor(Math.random() * 10);
+          const isUrgent = Math.random() < 0.5;
           
           setCurrentAlert({
             id: Date.now().toString(),
             timestamp: alert.timestamp,
             confidence: alert.confidence || 0,
             source: 'jetson',
-            predictionTime: `${minTime}-${maxTime} min`
+            predictionTime: isUrgent ? 'moins de 25 min' : 'moins de 50 min',
+            alertType: isUrgent ? 'urgent' : 'warning'
           });
         }
       },
@@ -178,16 +180,39 @@ const Dashboard = () => {
     }
   };
 
+  // Couleur de l'alerte basée sur le type
+  const getAlertBgColor = () => {
+    if (!currentAlert) return 'bg-red-50';
+    return currentAlert.alertType === 'urgent' ? 'bg-red-50' : 'bg-orange-50';
+  };
+
+  const getAlertBorderColor = () => {
+    if (!currentAlert) return 'border-red-200';
+    return currentAlert.alertType === 'urgent' ? 'border-red-200' : 'border-orange-200';
+  };
+
+  const getAlertIcon = () => {
+    if (!currentAlert) return '🚨';
+    return currentAlert.alertType === 'urgent' ? '🚨' : '⚠️';
+  };
+
+  const getAlertTitle = () => {
+    if (!currentAlert) return 'CRISE PRÉDITE';
+    return currentAlert.alertType === 'urgent' ? 'CRISE PRÉDITE - URGENT' : 'CRISE PRÉDITE - ATTENTION';
+  };
+
   return (
     <div className="space-y-6">
-      {/* Alerte de crise */}
+      {/* Alerte de crise avec deux types */}
       {currentAlert && (
         <div className="alert-animation">
-          <Alert className="bg-red-50 border-red-200">
-            <AlertTriangle className="h-4 w-4 text-red-600" />
+          <Alert className={`${getAlertBgColor()} ${getAlertBorderColor()}`}>
+            <AlertTriangle className={`h-4 w-4 ${currentAlert.alertType === 'urgent' ? 'text-red-600' : 'text-orange-600'}`} />
             <AlertDescription className="flex items-center justify-between">
               <div>
-                <strong className="text-red-600">🚨 CRISE PRÉDITE</strong>
+                <strong className={currentAlert.alertType === 'urgent' ? 'text-red-600' : 'text-orange-600'}>
+                  {getAlertIcon()} {getAlertTitle()}
+                </strong>
                 <div className="mt-1 text-sm">
                   Source: {currentAlert.source === 'jetson' ? 'Jetson Nano' : 'Analyse EDF'} | 
                   Confiance: {currentAlert.confidence}% | 
@@ -208,14 +233,14 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Graphique EEG avec signal simulé basé sur connexion Jetson */}
+      {/* Graphique EEG avec signal périodique simple */}
       <EEGChart 
         isRealTime={true} 
         duration={30} 
         jetsonConnected={jetsonStatus === 'connected'} 
       />
 
-      {/* Statut Jetson avec même largeur que le graphique */}
+      {/* Statut Jetson */}
       <div className="w-full">
         <Card className="medical-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
