@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { EEGDataPoint, EEGChartProps } from '@/types/eeg';
 import { useEDFProcessor } from '@/hooks/useEDFProcessor';
@@ -15,28 +16,26 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
 }) => {
   const [data, setData] = useState<EEGDataPoint[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const sampleCountRef = useRef(0);
+  const timeOffsetRef = useRef(0);
 
   const { edfProcessingStatus } = useEDFProcessor();
 
-  // Signal simple et fluide
-  const generateSimplePeriodicSignal = (startSample: number, numSamples: number): number[] => {
+  // Signal sinusoïdal qui se translate dans le temps
+  const generateTravelingWave = (startTime: number, numSamples: number): number[] => {
     const samples: number[] = [];
     const sampleRate = 256; // 256 Hz
-    const frequency = 0.8; // 0.8 Hz - fréquence modérée
-    const amplitude = 25; // Amplitude modérée
+    const frequency = 1; // 1 Hz - fréquence de l'onde
+    const amplitude = 30; // Amplitude
+    const waveSpeed = 2; // Vitesse de déplacement de la vague
     
     for (let i = 0; i < numSamples; i++) {
-      const t = (startSample + i) / sampleRate;
+      const t = (startTime + i) / sampleRate;
       
-      // Signal sinusoïdal simple et lisse
-      const signal = amplitude * Math.sin(2 * Math.PI * frequency * t);
+      // Onde sinusoïdale qui se déplace : sin(2π(f*t - v*t)) = sin(2π*t*(f-v))
+      // Ou plus simplement : on ajoute un décalage temporel qui augmente
+      const signal = amplitude * Math.sin(2 * Math.PI * frequency * (t + timeOffsetRef.current));
       
-      // Très léger bruit pour éviter une ligne parfaite
-      const noise = (Math.random() - 0.5) * 1;
-      
-      const finalAmplitude = signal + noise;
-      samples.push(Math.max(-40, Math.min(40, finalAmplitude)));
+      samples.push(signal);
     }
     
     return samples;
@@ -76,13 +75,14 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
     // Only show signal when Jetson is connected
     if (!jetsonConnected || !isRealTime) {
       setData([]);
+      timeOffsetRef.current = 0;
       return;
     }
 
-    // Initialize with simple periodic data when Jetson connects
+    // Initialize with traveling wave data when Jetson connects
     const initialData: EEGDataPoint[] = [];
     const now = Date.now();
-    const initialSamples = generateSimplePeriodicSignal(0, duration * 256);
+    const initialSamples = generateTravelingWave(0, duration * 256);
     
     initialSamples.forEach((amplitude, index) => {
       const timestamp = now - (duration * 1000) + (index * (1000 / 256));
@@ -97,13 +97,15 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
     
     setData(initialData);
 
-    // Generate new simple periodic data every second when connected
+    // Generate new traveling wave data every 100ms for smooth movement
     intervalRef.current = setInterval(() => {
-      sampleCountRef.current += 256;
-      const samples = generateSimplePeriodicSignal(sampleCountRef.current, 256);
+      // Incrémenter le décalage temporel pour faire "glisser" la vague
+      timeOffsetRef.current += 0.1;
+      
+      const samples = generateTravelingWave(Date.now() / 1000 * 256, 25); // 25 samples = 100ms à 256Hz
       const newDataPoints = convertSamplesToDataPoints(samples);
       updateDataWithNewPoints(newDataPoints);
-    }, 1000);
+    }, 100);
 
     return () => {
       if (intervalRef.current) {
