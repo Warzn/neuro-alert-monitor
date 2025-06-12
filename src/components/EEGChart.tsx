@@ -16,25 +16,21 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
 }) => {
   const [data, setData] = useState<EEGDataPoint[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const timeOffsetRef = useRef(0);
+  const phaseRef = useRef(0);
 
   const { edfProcessingStatus } = useEDFProcessor();
 
-  // Signal sinusoïdal qui se translate dans le temps
-  const generateTravelingWave = (startTime: number, numSamples: number): number[] => {
+  // Génère une onde sinusoïdale propre qui se déplace
+  const generateSineWave = (startTime: number, numSamples: number): number[] => {
     const samples: number[] = [];
     const sampleRate = 256; // 256 Hz
-    const frequency = 1; // 1 Hz - fréquence de l'onde
-    const amplitude = 30; // Amplitude
-    const waveSpeed = 2; // Vitesse de déplacement de la vague
+    const frequency = 1; // 1 Hz
+    const amplitude = 50; // Amplitude visible
     
     for (let i = 0; i < numSamples; i++) {
       const t = (startTime + i) / sampleRate;
-      
-      // Onde sinusoïdale qui se déplace : sin(2π(f*t - v*t)) = sin(2π*t*(f-v))
-      // Ou plus simplement : on ajoute un décalage temporel qui augmente
-      const signal = amplitude * Math.sin(2 * Math.PI * frequency * (t + timeOffsetRef.current));
-      
+      // Onde sinusoïdale avec phase qui avance pour créer le mouvement
+      const signal = amplitude * Math.sin(2 * Math.PI * frequency * t + phaseRef.current);
       samples.push(signal);
     }
     
@@ -50,8 +46,8 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
         timestamp,
         amplitude,
         time: '',
-        envelope_max: amplitude + 15,
-        envelope_min: amplitude - 15
+        envelope_max: amplitude + 10,
+        envelope_min: amplitude - 10
       };
     });
   };
@@ -75,14 +71,14 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
     // Only show signal when Jetson is connected
     if (!jetsonConnected || !isRealTime) {
       setData([]);
-      timeOffsetRef.current = 0;
+      phaseRef.current = 0;
       return;
     }
 
-    // Initialize with traveling wave data when Jetson connects
+    // Initialize with sine wave data when Jetson connects
     const initialData: EEGDataPoint[] = [];
     const now = Date.now();
-    const initialSamples = generateTravelingWave(0, duration * 256);
+    const initialSamples = generateSineWave(0, duration * 256);
     
     initialSamples.forEach((amplitude, index) => {
       const timestamp = now - (duration * 1000) + (index * (1000 / 256));
@@ -90,19 +86,19 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
         timestamp,
         amplitude,
         time: '',
-        envelope_max: amplitude + 15,
-        envelope_min: amplitude - 15
+        envelope_max: amplitude + 10,
+        envelope_min: amplitude - 10
       });
     });
     
     setData(initialData);
 
-    // Generate new traveling wave data every 100ms for smooth movement
+    // Generate new sine wave data every 100ms for smooth movement
     intervalRef.current = setInterval(() => {
-      // Incrémenter le décalage temporel pour faire "glisser" la vague
-      timeOffsetRef.current += 0.1;
+      // Avancer la phase pour faire glisser l'onde
+      phaseRef.current += 0.2;
       
-      const samples = generateTravelingWave(Date.now() / 1000 * 256, 25); // 25 samples = 100ms à 256Hz
+      const samples = generateSineWave(Date.now() / 1000 * 256, 25); // 25 samples = 100ms à 256Hz
       const newDataPoints = convertSamplesToDataPoints(samples);
       updateDataWithNewPoints(newDataPoints);
     }, 100);
