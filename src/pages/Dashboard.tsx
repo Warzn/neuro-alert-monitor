@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import EEGChart from '@/components/EEGChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,8 +42,8 @@ const Dashboard = () => {
           setCurrentAlert(newAlert);
           setAlertCount(prev => prev + 1);
           
-          // Notification sonore améliorée
-          playEnhancedAlertSound();
+          // Notification sonore professionnelle améliorée
+          playProfessionalAlertSound(isUrgent);
           
           // Toast notification avec type d'alerte
           toast({
@@ -59,56 +58,87 @@ const Dashboard = () => {
     }
   }, [jetsonStatus]);
 
-  // Fonction pour jouer un son d'alerte amélioré et plus attirant
-  const playEnhancedAlertSound = () => {
+  // Fonction pour jouer un son d'alerte professionnel et sophistiqué
+  const playProfessionalAlertSound = (isUrgent: boolean = false) => {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       
-      // Première séquence - son urgent montant
-      const createUrgentBeep = (freq: number, startTime: number, duration: number) => {
+      // Fonction pour créer un beep médical propre
+      const createMedicalBeep = (frequency: number, startTime: number, duration: number, volume: number = 0.3) => {
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
+        const filter = audioContext.createBiquadFilter();
         
-        oscillator.connect(gainNode);
+        // Chaîne audio: Oscillator -> Filter -> Gain -> Destination
+        oscillator.connect(filter);
+        filter.connect(gainNode);
         gainNode.connect(audioContext.destination);
         
-        oscillator.frequency.setValueAtTime(freq, audioContext.currentTime + startTime);
-        oscillator.frequency.exponentialRampToValueAtTime(freq * 1.5, audioContext.currentTime + startTime + duration);
-        oscillator.type = 'sawtooth';
+        // Configuration de l'oscillateur
+        oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime + startTime);
+        oscillator.type = 'sine'; // Onde sinusoïdale pure pour un son médical propre
         
+        // Filtre passe-bas pour adoucir le son
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(2000, audioContext.currentTime + startTime);
+        filter.Q.setValueAtTime(1, audioContext.currentTime + startTime);
+        
+        // Enveloppe ADSR sophistiquée
         gainNode.gain.setValueAtTime(0, audioContext.currentTime + startTime);
-        gainNode.gain.rapidlyTo(0.4, audioContext.currentTime + startTime + 0.01);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + startTime + duration);
+        gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + startTime + 0.05); // Attack
+        gainNode.gain.linearRampToValueAtTime(volume * 0.8, audioContext.currentTime + startTime + 0.1); // Decay
+        gainNode.gain.setValueAtTime(volume * 0.8, audioContext.currentTime + startTime + duration - 0.1); // Sustain
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + startTime + duration); // Release
         
         oscillator.start(audioContext.currentTime + startTime);
         oscillator.stop(audioContext.currentTime + startTime + duration);
       };
       
-      // Séquence d'alarme médical
-      createUrgentBeep(800, 0, 0.3);      // Premier beep
-      createUrgentBeep(1000, 0.4, 0.3);   // Deuxième beep plus aigu
-      createUrgentBeep(1200, 0.8, 0.3);   // Troisième beep encore plus aigu
-      
-      // Son continu d'alerte grave
-      setTimeout(() => {
-        const lowOscillator = audioContext.createOscillator();
-        const lowGain = audioContext.createGain();
+      if (isUrgent) {
+        // Séquence d'urgence : 3 beeps rapides + tonalité continue
+        createMedicalBeep(800, 0, 0.2, 0.4);      // Premier beep urgent
+        createMedicalBeep(1000, 0.3, 0.2, 0.4);   // Deuxième beep plus aigu
+        createMedicalBeep(1200, 0.6, 0.2, 0.4);   // Troisième beep très aigu
         
-        lowOscillator.connect(lowGain);
-        lowGain.connect(audioContext.destination);
+        // Tonalité continue d'urgence
+        setTimeout(() => {
+          const urgentTone = audioContext.createOscillator();
+          const urgentGain = audioContext.createGain();
+          const urgentFilter = audioContext.createBiquadFilter();
+          
+          urgentTone.connect(urgentFilter);
+          urgentFilter.connect(urgentGain);
+          urgentGain.connect(audioContext.destination);
+          
+          urgentTone.frequency.setValueAtTime(600, audioContext.currentTime);
+          urgentTone.type = 'sine';
+          
+          urgentFilter.type = 'lowpass';
+          urgentFilter.frequency.setValueAtTime(1500, audioContext.currentTime);
+          
+          urgentGain.gain.setValueAtTime(0.25, audioContext.currentTime);
+          urgentGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 1.5);
+          
+          urgentTone.start(audioContext.currentTime);
+          urgentTone.stop(audioContext.currentTime + 1.5);
+        }, 900);
+      } else {
+        // Séquence d'attention : 2 beeps doux + écho
+        createMedicalBeep(500, 0, 0.3, 0.25);     // Premier beep doux
+        createMedicalBeep(700, 0.5, 0.3, 0.25);   // Deuxième beep
         
-        lowOscillator.frequency.setValueAtTime(200, audioContext.currentTime);
-        lowOscillator.type = 'square';
-        
-        lowGain.gain.setValueAtTime(0.2, audioContext.currentTime);
-        lowGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.5);
-        
-        lowOscillator.start(audioContext.currentTime);
-        lowOscillator.stop(audioContext.currentTime + 1.5);
-      }, 1200);
+        // Écho subtil
+        setTimeout(() => {
+          createMedicalBeep(600, 0, 0.4, 0.15);
+        }, 1000);
+      }
       
     } catch (error) {
       console.log('Audio non supporté:', error);
+      // Fallback : vibration si supportée
+      if (navigator.vibrate) {
+        navigator.vibrate(isUrgent ? [200, 100, 200, 100, 400] : [300, 200, 300]);
+      }
     }
   };
 
@@ -155,10 +185,15 @@ const Dashboard = () => {
   };
 
   const testAlertSound = () => {
-    playEnhancedAlertSound();
+    // Test des deux types de sons
+    playProfessionalAlertSound(false);
+    setTimeout(() => {
+      playProfessionalAlertSound(true);
+    }, 2000);
+    
     toast({
       title: "🔊 Test Audio",
-      description: "Son d'alerte testé avec succès",
+      description: "Son d'alerte testé - attention puis urgent",
     });
   };
 

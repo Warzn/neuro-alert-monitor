@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceLine, defs, linearGradient, stop } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { EEGDataPoint } from '@/types/eeg';
 
 interface EEGChartDisplayProps {

@@ -20,16 +20,16 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
 
   const { edfProcessingStatus } = useEDFProcessor();
 
-  // Génère une onde sinusoïdale propre qui se déplace
-  const generateSineWave = (startTime: number, numSamples: number): number[] => {
+  // Génère une onde sinusoïdale parfaite comme dans l'image
+  const generatePerfectSineWave = (startTime: number, numSamples: number): number[] => {
     const samples: number[] = [];
     const sampleRate = 256; // 256 Hz
-    const frequency = 0.2; // 0.2 Hz - fréquence ajustée selon demande
-    const amplitude = 50; // Amplitude visible
+    const frequency = 0.15; // Fréquence ajustée pour correspondre à l'image
+    const amplitude = 80; // Amplitude plus élevée pour correspondre à l'image
     
     for (let i = 0; i < numSamples; i++) {
       const t = (startTime + i) / sampleRate;
-      // Onde sinusoïdale avec phase qui avance pour créer le mouvement
+      // Onde sinusoïdale pure avec phase qui avance
       const signal = amplitude * Math.sin(2 * Math.PI * frequency * t + phaseRef.current);
       samples.push(signal);
     }
@@ -75,10 +75,10 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
       return;
     }
 
-    // Initialize with sine wave data when Jetson connects
+    // Initialize with perfect sine wave data when Jetson connects
     const initialData: EEGDataPoint[] = [];
     const now = Date.now();
-    const initialSamples = generateSineWave(0, duration * 256);
+    const initialSamples = generatePerfectSineWave(0, duration * 256);
     
     initialSamples.forEach((amplitude, index) => {
       const timestamp = now - (duration * 1000) + (index * (1000 / 256));
@@ -93,12 +93,12 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
     
     setData(initialData);
 
-    // Generate new sine wave data every 100ms for smooth movement
+    // Generate new perfect sine wave data every 100ms for ultra-smooth movement
     intervalRef.current = setInterval(() => {
-      // Avancer la phase pour faire glisser l'onde
-      phaseRef.current += 0.2; // Phase ajustée selon demande
+      // Avancer la phase très lentement pour un mouvement fluide
+      phaseRef.current += 0.15; // Phase parfaitement ajustée
       
-      const samples = generateSineWave(Date.now() / 1000 * 256, 25); // 25 samples = 100ms à 256Hz
+      const samples = generatePerfectSineWave(Date.now() / 1000 * 256, 25); // 25 samples = 100ms à 256Hz
       const newDataPoints = convertSamplesToDataPoints(samples);
       updateDataWithNewPoints(newDataPoints);
     }, 100);
