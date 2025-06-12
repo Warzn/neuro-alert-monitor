@@ -17,21 +17,30 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
   const [data, setData] = useState<EEGDataPoint[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const phaseRef = useRef(0);
+  const timeRef = useRef(0);
 
   const { edfProcessingStatus } = useEDFProcessor();
 
-  // Génère une onde sinusoïdale parfaite comme dans l'image
-  const generatePerfectSineWave = (startTime: number, numSamples: number): number[] => {
+  // Génère un signal ultra-lisse avec interpolation
+  const generateSmoothSignal = (startTime: number, numSamples: number): number[] => {
     const samples: number[] = [];
     const sampleRate = 256; // 256 Hz
-    const frequency = 0.15; // Fréquence ajustée pour correspondre à l'image
-    const amplitude = 80; // Amplitude plus élevée pour correspondre à l'image
+    const frequency = 0.08; // Fréquence très réduite pour un signal plus lent
+    const amplitude = 75;
     
     for (let i = 0; i < numSamples; i++) {
       const t = (startTime + i) / sampleRate;
-      // Onde sinusoïdale pure avec phase qui avance
-      const signal = amplitude * Math.sin(2 * Math.PI * frequency * t + phaseRef.current);
-      samples.push(signal);
+      
+      // Signal sinusoïdal de base ultra-lisse
+      const baseSignal = amplitude * Math.sin(2 * Math.PI * frequency * t + phaseRef.current);
+      
+      // Ajouter une très légère harmonique pour un signal plus naturel
+      const harmonic = amplitude * 0.15 * Math.sin(4 * Math.PI * frequency * t + phaseRef.current * 0.7);
+      
+      // Signal final ultra-lisse
+      const smoothSignal = baseSignal + harmonic;
+      
+      samples.push(smoothSignal);
     }
     
     return samples;
@@ -46,8 +55,8 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
         timestamp,
         amplitude,
         time: '',
-        envelope_max: amplitude + 10,
-        envelope_min: amplitude - 10
+        envelope_max: amplitude + 8,
+        envelope_min: amplitude - 8
       };
     });
   };
@@ -72,13 +81,14 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
     if (!jetsonConnected || !isRealTime) {
       setData([]);
       phaseRef.current = 0;
+      timeRef.current = 0;
       return;
     }
 
-    // Initialize with perfect sine wave data when Jetson connects
+    // Initialize with smooth signal data when Jetson connects
     const initialData: EEGDataPoint[] = [];
     const now = Date.now();
-    const initialSamples = generatePerfectSineWave(0, duration * 256);
+    const initialSamples = generateSmoothSignal(0, duration * 256);
     
     initialSamples.forEach((amplitude, index) => {
       const timestamp = now - (duration * 1000) + (index * (1000 / 256));
@@ -86,22 +96,23 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
         timestamp,
         amplitude,
         time: '',
-        envelope_max: amplitude + 10,
-        envelope_min: amplitude - 10
+        envelope_max: amplitude + 8,
+        envelope_min: amplitude - 8
       });
     });
     
     setData(initialData);
 
-    // Generate new perfect sine wave data every 100ms for ultra-smooth movement
+    // Generate new smooth signal data every 150ms pour un mouvement ultra-fluide
     intervalRef.current = setInterval(() => {
-      // Avancer la phase très lentement pour un mouvement fluide
-      phaseRef.current += 0.15; // Phase parfaitement ajustée
+      // Avancer la phase très lentement pour un mouvement ultra-fluide
+      phaseRef.current += 0.08;
+      timeRef.current += 0.15;
       
-      const samples = generatePerfectSineWave(Date.now() / 1000 * 256, 25); // 25 samples = 100ms à 256Hz
+      const samples = generateSmoothSignal(timeRef.current * 256, 38); // 38 samples = 150ms à 256Hz
       const newDataPoints = convertSamplesToDataPoints(samples);
       updateDataWithNewPoints(newDataPoints);
-    }, 100);
+    }, 150);
 
     return () => {
       if (intervalRef.current) {
