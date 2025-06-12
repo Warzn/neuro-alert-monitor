@@ -24,7 +24,7 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
   const generateSineWave = (startTime: number, numSamples: number): number[] => {
     const samples: number[] = [];
     const sampleRate = 256; // 256 Hz
-    const frequency = 1; // 1 Hz
+    const frequency = 0.3; // 0.3 Hz - fréquence réduite pour espacer les ondes
     const amplitude = 50; // Amplitude visible
     
     for (let i = 0; i < numSamples; i++) {
@@ -96,7 +96,7 @@ const EEGChart: React.FC<EEGChartPropsExtended> = ({
     // Generate new sine wave data every 100ms for smooth movement
     intervalRef.current = setInterval(() => {
       // Avancer la phase pour faire glisser l'onde
-      phaseRef.current += 0.2;
+      phaseRef.current += 0.1; // Phase réduite pour un mouvement plus lent
       
       const samples = generateSineWave(Date.now() / 1000 * 256, 25); // 25 samples = 100ms à 256Hz
       const newDataPoints = convertSamplesToDataPoints(samples);
