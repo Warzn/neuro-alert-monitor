@@ -6,6 +6,7 @@ import { AlertTriangle, Wifi, X, Volume2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { jetsonService, JetsonAlert } from '@/services/JetsonTCPService';
 import { toast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface SeizureAlert {
   id: string;
@@ -13,13 +14,14 @@ interface SeizureAlert {
   confidence: number;
   source: 'jetson' | 'local';
   predictionTime: string;
-  alertType: 'urgent' | 'warning'; // Type d'alerte
+  alertType: 'urgent' | 'warning';
 }
 
 const Dashboard = () => {
   const [currentAlert, setCurrentAlert] = useState<SeizureAlert | null>(null);
   const [jetsonStatus, setJetsonStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('disconnected');
   const [alertCount, setAlertCount] = useState(0);
+  const isMobile = useIsMobile();
 
   // Simulation d'alertes avec deux types
   useEffect(() => {
@@ -40,8 +42,8 @@ const Dashboard = () => {
           setCurrentAlert(newAlert);
           setAlertCount(prev => prev + 1);
           
-          // Son d'alarme de danger professionnel
-          playDangerAlarm(isUrgent);
+          // Son d'alarme de minuteur
+          playTimerAlarm(isUrgent);
           
           toast({
             title: isUrgent ? "🚨 Crise Prédite - Urgent" : "⚠️ Crise Prédite - Attention",
@@ -55,33 +57,25 @@ const Dashboard = () => {
     }
   }, [jetsonStatus]);
 
-  // Fonction pour jouer un son d'alarme de danger professionnel
-  const playDangerAlarm = (isUrgent: boolean = false) => {
+  // Son d'alarme simple de minuteur
+  const playTimerAlarm = (isUrgent: boolean = false) => {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       
-      // Fonction pour créer un beep d'alarme médical
-      const createAlarmBeep = (frequency: number, startTime: number, duration: number, volume: number = 0.4) => {
+      // Son d'alarme simple de minuteur
+      const createTimerBeep = (frequency: number, startTime: number, duration: number, volume: number = 0.3) => {
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
-        const filter = audioContext.createBiquadFilter();
         
-        oscillator.connect(filter);
-        filter.connect(gainNode);
+        oscillator.connect(gainNode);
         gainNode.connect(audioContext.destination);
         
         oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime + startTime);
-        oscillator.type = 'square'; // Onde carrée pour un son d'alarme plus percutant
+        oscillator.type = 'square';
         
-        // Filtre pour adoucir légèrement
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(3000, audioContext.currentTime + startTime);
-        filter.Q.setValueAtTime(2, audioContext.currentTime + startTime);
-        
-        // Enveloppe pour l'alarme
         gainNode.gain.setValueAtTime(0, audioContext.currentTime + startTime);
-        gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + startTime + 0.02);
-        gainNode.gain.setValueAtTime(volume, audioContext.currentTime + startTime + duration - 0.05);
+        gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + startTime + 0.01);
+        gainNode.gain.setValueAtTime(volume, audioContext.currentTime + startTime + duration - 0.01);
         gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + startTime + duration);
         
         oscillator.start(audioContext.currentTime + startTime);
@@ -89,75 +83,21 @@ const Dashboard = () => {
       };
       
       if (isUrgent) {
-        // Alarme d'urgence : Séquence rapide + sirène continue
-        createAlarmBeep(1000, 0, 0.15, 0.5);    // Beep 1
-        createAlarmBeep(1200, 0.2, 0.15, 0.5);  // Beep 2
-        createAlarmBeep(1000, 0.4, 0.15, 0.5);  // Beep 3
-        createAlarmBeep(1200, 0.6, 0.15, 0.5);  // Beep 4
-        
-        // Sirène d'urgence continue
-        setTimeout(() => {
-          const sirenOsc = audioContext.createOscillator();
-          const sirenGain = audioContext.createGain();
-          const sirenFilter = audioContext.createBiquadFilter();
-          
-          sirenOsc.connect(sirenFilter);
-          sirenFilter.connect(sirenGain);
-          sirenGain.connect(audioContext.destination);
-          
-          sirenOsc.type = 'sawtooth';
-          sirenFilter.type = 'lowpass';
-          sirenFilter.frequency.setValueAtTime(2000, audioContext.currentTime);
-          
-          // Modulation de fréquence pour effet sirène
-          sirenOsc.frequency.setValueAtTime(800, audioContext.currentTime);
-          sirenOsc.frequency.linearRampToValueAtTime(1400, audioContext.currentTime + 0.5);
-          sirenOsc.frequency.linearRampToValueAtTime(800, audioContext.currentTime + 1.0);
-          sirenOsc.frequency.linearRampToValueAtTime(1400, audioContext.currentTime + 1.5);
-          sirenOsc.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 2.0);
-          
-          sirenGain.gain.setValueAtTime(0.3, audioContext.currentTime);
-          sirenGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 2.0);
-          
-          sirenOsc.start(audioContext.currentTime);
-          sirenOsc.stop(audioContext.currentTime + 2.0);
-        }, 800);
-        
+        // Alarme urgente : 4 bips rapides
+        createTimerBeep(800, 0, 0.1, 0.4);
+        createTimerBeep(800, 0.15, 0.1, 0.4);
+        createTimerBeep(800, 0.3, 0.1, 0.4);
+        createTimerBeep(800, 0.45, 0.1, 0.4);
       } else {
-        // Alarme d'attention : Double beep + tonalité descendante
-        createAlarmBeep(900, 0, 0.2, 0.35);     // Beep 1
-        createAlarmBeep(900, 0.3, 0.2, 0.35);   // Beep 2
-        
-        // Tonalité descendante d'attention
-        setTimeout(() => {
-          const descendingOsc = audioContext.createOscillator();
-          const descendingGain = audioContext.createGain();
-          const descendingFilter = audioContext.createBiquadFilter();
-          
-          descendingOsc.connect(descendingFilter);
-          descendingFilter.connect(descendingGain);
-          descendingGain.connect(audioContext.destination);
-          
-          descendingOsc.type = 'triangle';
-          descendingFilter.type = 'lowpass';
-          descendingFilter.frequency.setValueAtTime(1800, audioContext.currentTime);
-          
-          descendingOsc.frequency.setValueAtTime(1000, audioContext.currentTime);
-          descendingOsc.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 1.2);
-          
-          descendingGain.gain.setValueAtTime(0.25, audioContext.currentTime);
-          descendingGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 1.2);
-          
-          descendingOsc.start(audioContext.currentTime);
-          descendingOsc.stop(audioContext.currentTime + 1.2);
-        }, 600);
+        // Alarme normale : 2 bips
+        createTimerBeep(600, 0, 0.15, 0.3);
+        createTimerBeep(600, 0.25, 0.15, 0.3);
       }
       
     } catch (error) {
       console.log('Audio non supporté:', error);
-      // Fallback : vibration si supportée
       if (navigator.vibrate) {
-        navigator.vibrate(isUrgent ? [200, 100, 200, 100, 500] : [400, 200, 400]);
+        navigator.vibrate(isUrgent ? [100, 50, 100, 50, 100, 50, 100] : [200, 100, 200]);
       }
     }
   };
@@ -204,14 +144,14 @@ const Dashboard = () => {
   };
 
   const testAlertSound = () => {
-    playDangerAlarm(false);
+    playTimerAlarm(false);
     setTimeout(() => {
-      playDangerAlarm(true);
-    }, 3000);
+      playTimerAlarm(true);
+    }, 1500);
     
     toast({
       title: "🔊 Test Alarme",
-      description: "Son d'alarme testé - attention puis urgent",
+      description: "Son d'alarme testé - normal puis urgent",
     });
   };
 
@@ -255,18 +195,18 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Alerte de crise avec deux types */}
+    <div className="space-y-4 sm:space-y-6">
+      {/* Alerte de crise responsive */}
       {currentAlert && (
         <div className="alert-animation">
           <Alert className={`${getAlertBgColor()} ${getAlertBorderColor()}`}>
             <AlertTriangle className={`h-4 w-4 ${currentAlert.alertType === 'urgent' ? 'text-red-600' : 'text-orange-600'}`} />
-            <AlertDescription className="flex items-center justify-between">
+            <AlertDescription className={`flex ${isMobile ? 'flex-col space-y-2' : 'items-center justify-between'}`}>
               <div>
                 <strong className={currentAlert.alertType === 'urgent' ? 'text-red-600' : 'text-orange-600'}>
                   {getAlertIcon()} {getAlertTitle()}
                 </strong>
-                <div className="mt-1 text-sm">
+                <div className="mt-1 text-xs sm:text-sm">
                   Source: {currentAlert.source === 'jetson' ? 'Jetson Nano' : 'Analyse EDF'} | 
                   Confiance: {currentAlert.confidence}% | 
                   Prévue dans: {currentAlert.predictionTime}
@@ -276,7 +216,7 @@ const Dashboard = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleAcknowledgeAlert}
-                className="ml-4"
+                className={`${isMobile ? 'w-full' : 'ml-4'}`}
               >
                 <X className="w-4 h-4 mr-1" />
                 Acquitter
@@ -286,14 +226,14 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Graphique EEG avec signal périodique simple */}
+      {/* Graphique EEG responsive */}
       <EEGChart 
         isRealTime={true} 
         duration={30} 
         jetsonConnected={jetsonStatus === 'connected'} 
       />
 
-      {/* Statut Jetson */}
+      {/* Statut Jetson responsive */}
       <div className="w-full">
         <Card className="medical-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -301,7 +241,7 @@ const Dashboard = () => {
             <Wifi className={`h-4 w-4 ${getJetsonStatusColor()}`} />
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between">
+            <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'items-center justify-between'}`}>
               <div className="flex items-center">
                 <div className={`w-3 h-3 rounded-full mr-2 ${
                   jetsonStatus === 'connected' ? 'bg-green-500' : 
@@ -310,7 +250,7 @@ const Dashboard = () => {
                 }`}></div>
                 <span className="text-sm font-medium">{getJetsonStatusText()}</span>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className={`flex items-center ${isMobile ? 'justify-between' : 'space-x-2'}`}>
                 <Button
                   variant="outline"
                   size="sm"

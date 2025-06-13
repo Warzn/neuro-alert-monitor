@@ -9,9 +9,9 @@ interface EEGChartDisplayProps {
 
 const EEGChartDisplay: React.FC<EEGChartDisplayProps> = ({ data }) => {
   return (
-    <div className="h-80 w-full">
+    <div className="h-64 sm:h-80 w-full touch-pan-x">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data}>
+        <LineChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
           <defs>
             <linearGradient id="eegGradient" x1="0" y1="0" x2="1" y2="0">
               <stop offset="0%" stopColor="#667eea" stopOpacity={0.9}/>
@@ -33,12 +33,11 @@ const EEGChartDisplay: React.FC<EEGChartDisplayProps> = ({ data }) => {
             type="monotone" 
             dataKey="amplitude" 
             stroke="url(#eegGradient)"
-            strokeWidth={3}
+            strokeWidth={2}
             dot={false}
             connectNulls={false}
             strokeLinecap="round"
             strokeLinejoin="round"
-            filter="drop-shadow(0 3px 6px rgba(102, 126, 234, 0.4))"
           />
         </LineChart>
       </ResponsiveContainer>
