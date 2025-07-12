@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import EEGChart from '@/components/EEGChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Wifi, X, Volume2 } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Wifi, Volume2 } from 'lucide-react';
 import { jetsonService, JetsonAlert } from '@/services/JetsonTCPService';
 import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import SeizureToast from '@/components/SeizureToast';
 
 interface SeizureAlert {
   id: string;
@@ -44,12 +44,6 @@ const Dashboard = () => {
           
           // Son d'alarme de minuteur
           playTimerAlarm(isUrgent);
-          
-          toast({
-            title: isUrgent ? "🚨 Crise Prédite - Urgent" : "⚠️ Crise Prédite - Attention",
-            description: `Confiance: ${newAlert.confidence}% - Prévue dans ${newAlert.predictionTime}`,
-            variant: "destructive",
-          });
         }
       }, 5000);
 
@@ -139,7 +133,7 @@ const Dashboard = () => {
     };
   }, []);
 
-  const handleAcknowledgeAlert = () => {
+  const handleDismissAlert = () => {
     setCurrentAlert(null);
   };
 
@@ -196,34 +190,14 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* Alerte de crise responsive */}
+      {/* Toast de crise */}
       {currentAlert && (
-        <div className="alert-animation">
-          <Alert className={`${getAlertBgColor()} ${getAlertBorderColor()}`}>
-            <AlertTriangle className={`h-4 w-4 ${currentAlert.alertType === 'urgent' ? 'text-red-600' : 'text-orange-600'}`} />
-            <AlertDescription className={`flex ${isMobile ? 'flex-col space-y-2' : 'items-center justify-between'}`}>
-              <div>
-                <strong className={currentAlert.alertType === 'urgent' ? 'text-red-600' : 'text-orange-600'}>
-                  {getAlertIcon()} {getAlertTitle()}
-                </strong>
-                <div className="mt-1 text-xs sm:text-sm">
-                  Source: {currentAlert.source === 'jetson' ? 'Jetson Nano' : 'Analyse EDF'} | 
-                  Confiance: {currentAlert.confidence}% | 
-                  Prévue dans: {currentAlert.predictionTime}
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleAcknowledgeAlert}
-                className={`${isMobile ? 'w-full' : 'ml-4'}`}
-              >
-                <X className="w-4 h-4 mr-1" />
-                Acquitter
-              </Button>
-            </AlertDescription>
-          </Alert>
-        </div>
+        <SeizureToast
+          confidence={currentAlert.confidence}
+          predictionTime={currentAlert.predictionTime}
+          isUrgent={currentAlert.alertType === 'urgent'}
+          onDismiss={handleDismissAlert}
+        />
       )}
 
       {/* Graphique EEG responsive */}
