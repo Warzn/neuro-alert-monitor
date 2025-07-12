@@ -60,7 +60,7 @@ const Layout = () => {
                   <Activity className="w-6 h-6 text-white" />
                 </div>
                 <span className="ml-3 text-lg sm:text-xl font-semibold text-gray-800">
-                  NeuroAlert Monitor
+                  Epilot
                 </span>
               </div>
             </div>
